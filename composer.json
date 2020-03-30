@@ -28,7 +28,7 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"charles\\Captcha\\": "src/"
+			"Charles\\Captcha\\": "src/"
 		},
 		"files": [
 			"src/helpers.php"
@@ -39,7 +39,7 @@
 			"tests"
 		],
 		"psr-4": {
-			"charles\\Test\\": "tests/"
+			"Charles\\Test\\": "tests/"
 		}
 	},
 	"minimum-stability": "dev",
