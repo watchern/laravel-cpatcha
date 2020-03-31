@@ -1,8 +1,12 @@
 # Captcha for Laravel 5
 
 [![Build Status](https://travis-ci.org/mewebstudio/captcha.svg?branch=master)](https://travis-ci.org/mewebstudio/captcha) [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/mewebstudio/captcha/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/mewebstudio/captcha/?branch=master)
+[![Latest Stable Version](https://poser.pugx.org/mews/captcha/v/stable.svg)](https://packagist.org/packages/mews/captcha)
+[![Latest Unstable Version](https://poser.pugx.org/mews/captcha/v/unstable.svg)](https://packagist.org/packages/mews/captcha)
+[![License](https://poser.pugx.org/mews/captcha/license.svg)](https://packagist.org/packages/mews/captcha)
+[![Total Downloads](https://poser.pugx.org/mews/captcha/downloads.svg)](https://packagist.org/packages/mews/captcha)
 
-A simple [Laravel 5](http://www.laravel.com/) service provider for including the [Captcha for Laravel 5](https://github.com/mewebstudio/captcha).
+A simple [Laravel 5/6/7](http://www.laravel.com/) service provider for including the [Captcha for Laravel](https://github.com/mewebstudio/captcha).
 
 for Laravel 4 [Captcha for Laravel Laravel 4](https://github.com/mewebstudio/captcha/tree/master-l4)
 
@@ -21,7 +25,7 @@ project's `composer.json`.
 {
     "require": {
         "laravel/framework": "5.0.*",
-        "charles/captcha": "~2.0"
+        "charles/captcha": "~3.1.0"
     },
     "minimum-stability": "dev"
 }
@@ -89,7 +93,7 @@ To use your own settings, publish config.
 ```php
 return [
     'mode'=>'other', // 模式session或者其他任意值表示非session模式
-    'lifetime' => 120, // 有效期xx秒，mode为session时此项无效
+    'lifetime' => 120, // 有效期120秒，mode为session时此项无效
     'default'   => [
         'length'    => 5,
         'width'     => 120,
@@ -142,7 +146,7 @@ captcha_src();
 ```
 or
 ```
-Captcha::src();
+Captcha::src('default');
 ```
 
 # Return HTML
@@ -169,7 +173,9 @@ Based on [Intervention Image](https://github.com/Intervention/image)
 ## Links
 * [Intervention Image](https://github.com/Intervention/image)
 * [L5 Captcha on Github](https://github.com/mewebstudio/captcha)
-* [L5 Captcha on Packagist](https://packagist.org/packages/charles/captcha)
+* [L5 Captcha on Packagist](https://packagist.org/packages/mews/captcha)
+* [L5/6/7 Captcha on Github](https://gitee.com/starw/captcha)
+* [L5/6/7 Captcha on Packagist](https://packagist.org/packages/charles/captcha)
 * [For L4 on Github](https://github.com/mewebstudio/captcha/tree/master-l4)
 * [License](http://www.opensource.org/licenses/mit-license.php)
 * [Laravel website](http://laravel.com)

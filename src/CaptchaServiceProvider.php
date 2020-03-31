@@ -2,7 +2,9 @@
 
 namespace Charles\Captcha;
 
+use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Factory;
 
 /**
  * Class CaptchaServiceProvider
@@ -13,9 +15,9 @@ class CaptchaServiceProvider extends ServiceProvider
     /**
      * Boot the service provider.
      *
-     * @return null
+     * @return void
      */
-    public function boot()
+    public function boot(): void
     {
         // Publish configuration files
         $this->publishes([
@@ -24,25 +26,32 @@ class CaptchaServiceProvider extends ServiceProvider
 
         // HTTP routing
         if (strpos($this->app->version(), 'Lumen') !== false) {
-            $this->app->get('captcha[/api/{config}]', 'Charles\Captcha\LumenCaptchaController@getCaptchaApi');
-            $this->app->get('captcha[/{config}]', 'Charles\Captcha\LumenCaptchaController@getCaptcha');
+            /* @var Router $router */
+            $router = $this->app;
+            $router->get('captcha[/api/{config}]', 'Charles\Captcha\LumenCaptchaController@getCaptchaApi');
+            $router->get('captcha[/{config}]', 'Charles\Captcha\LumenCaptchaController@getCaptcha');
         } else {
+            /* @var Router $router */
+            $router = $this->app['router'];
             if ((double)$this->app->version() >= 5.2) {
-                $this->app['router']->get('captcha/api/{config?}', '\Charles\Captcha\CaptchaController@getCaptchaApi')->middleware('web');
-                $this->app['router']->get('captcha/{config?}', '\Charles\Captcha\CaptchaController@getCaptcha')->middleware('web');
+                $router->get('captcha/api/{config?}', '\Charles\Captcha\CaptchaController@getCaptchaApi')->middleware('web');
+                $router->get('captcha/{config?}', '\Charles\Captcha\CaptchaController@getCaptcha')->middleware('web');
             } else {
-                $this->app['router']->get('captcha/api/{config?}', '\Charles\Captcha\CaptchaController@getCaptchaApi');
-                $this->app['router']->get('captcha/{config?}', '\Charles\Captcha\CaptchaController@getCaptcha');
+                $router->get('captcha/api/{config?}', '\Charles\Captcha\CaptchaController@getCaptchaApi');
+                $router->get('captcha/{config?}', '\Charles\Captcha\CaptchaController@getCaptcha');
             }
         }
 
+        /* @var Factory $validator */
+        $validator = $this->app['validator'];
+
         // Validator extensions
-        $this->app['validator']->extend('captcha', function ($attribute, $value, $parameters) {
+        $validator->extend('captcha', function ($attribute, $value, $parameters) {
             return captcha_check($value);
         });
 
         // Validator extensions
-        $this->app['validator']->extend('captcha_api', function ($attribute, $value, $parameters) {
+        $validator->extend('captcha_api', function ($attribute, $value, $parameters) {
             return captcha_api_check($value, $parameters[0]);
         });
     }
@@ -52,11 +61,12 @@ class CaptchaServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function register()
+    public function register(): void
     {
         // Merge configs
         $this->mergeConfigFrom(
-            __DIR__ . '/../config/captcha.php', 'captcha'
+            __DIR__ . '/../config/captcha.php',
+            'captcha'
         );
 
         // Bind captcha

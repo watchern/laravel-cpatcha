@@ -2,6 +2,7 @@
 
 namespace Charles\Captcha;
 
+use Exception;
 use Laravel\Lumen\Routing\Controller;
 
 /**
@@ -15,7 +16,8 @@ class LumenCaptchaController extends Controller
      *
      * @param Captcha $captcha
      * @param string $config
-     * @return \Intervention\Image\ImageManager->response
+     * @return array|mixed
+     * @throws Exception
      */
     public function getCaptcha(Captcha $captcha, $config = 'default')
     {

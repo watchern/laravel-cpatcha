@@ -3,7 +3,7 @@
 namespace Charles\Captcha;
 
 /**
- * Laravel 5 Captcha package
+ * Laravel 5 & 6 & 7 Captcha package
  *
  * @copyright Copyright (c) 2015 MeWebStudio
  * @version 2.x
@@ -18,7 +18,6 @@ use Exception;
 use Illuminate\Config\Repository;
 use Illuminate\Hashing\BcryptHasher as Hasher;
 use Illuminate\Filesystem\Filesystem;
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageManager;
 use Illuminate\Session\Store as Session;
@@ -225,16 +224,18 @@ class Captcha
      * Create captcha image
      *
      * @param string $config
-     * @param boolean $api
-     * @return ImageManager->response
+     * @param bool $api
+     * @return array|mixed
+     * @throws Exception
      */
-    public function create($config = 'default', $api = false)
+    public function create(string $config = 'default', bool $api = false)
     {
         $this->backgrounds = $this->files->files(__DIR__ . '/../assets/backgrounds');
         $this->fonts = $this->files->files($this->fontsDirectory);
 
         if (version_compare(app()->version(), '5.5.0', '>=')) {
             $this->fonts = array_map(function ($file) {
+                /* @var File $file */
                 return $file->getPathName();
             }, $this->fonts);
         }
@@ -274,7 +275,7 @@ class Captcha
             $this->image->sharpen($this->sharpen);
         }
         if ($this->invert) {
-            $this->image->invert($this->invert);
+            $this->image->invert();
         }
         if ($this->blur) {
             $this->image->blur($this->blur);
@@ -292,7 +293,7 @@ class Captcha
      *
      * @return string
      */
-    protected function background()
+    protected function background(): string
     {
         return $this->backgrounds[rand(0, count($this->backgrounds) - 1)];
     }
@@ -300,14 +301,14 @@ class Captcha
     /**
      * Generate captcha text
      *
-     * @return string
+     * @return array
+     * @throws Exception
      */
-    protected function generate()
+    protected function generate(): array
     {
         $characters = is_string($this->characters) ? str_split($this->characters) : $this->characters;
 
         $bag = [];
-        $key = '';
 
         if ($this->math) {
             $x = random_int(10, 30);
@@ -342,8 +343,10 @@ class Captcha
 
     /**
      * Writing captcha text
+     *
+     * @return void
      */
-    protected function text()
+    protected function text(): void
     {
         $marginTop = $this->image->height() / $this->length;
 
@@ -356,6 +359,7 @@ class Captcha
             $marginLeft = $this->textLeftPadding + ($key * ($this->image->width() - $this->textLeftPadding) / $this->length);
 
             $this->image->text($char, $marginLeft, $marginTop, function ($font) {
+                /* @var Font $font */
                 $font->file($this->font());
                 $font->size($this->fontSize());
                 $font->color($this->fontColor());
@@ -371,7 +375,7 @@ class Captcha
      *
      * @return string
      */
-    protected function font()
+    protected function font(): string
     {
         return $this->fonts[rand(0, count($this->fonts) - 1)];
     }
@@ -379,9 +383,9 @@ class Captcha
     /**
      * Random font size
      *
-     * @return integer
+     * @return int
      */
-    protected function fontSize()
+    protected function fontSize(): int
     {
         return rand($this->image->height() - 10, $this->image->height());
     }
@@ -389,14 +393,14 @@ class Captcha
     /**
      * Random font color
      *
-     * @return array
+     * @return string
      */
-    protected function fontColor()
+    protected function fontColor(): string
     {
         if (!empty($this->fontColors)) {
             $color = $this->fontColors[rand(0, count($this->fontColors) - 1)];
         } else {
-            $color = [rand(0, 255), rand(0, 255), rand(0, 255)];
+            $color = '#' . str_pad(dechex(mt_rand(0, 0xFFFFFF)), 6, '0', STR_PAD_LEFT);
         }
 
         return $color;
@@ -407,7 +411,7 @@ class Captcha
      *
      * @return int
      */
-    protected function angle()
+    protected function angle(): int
     {
         return rand((-1 * $this->angle), $this->angle);
     }
@@ -415,7 +419,7 @@ class Captcha
     /**
      * Random image lines
      *
-     * @return \Intervention\Image\Image
+     * @return Image|ImageManager
      */
     protected function lines()
     {
@@ -426,6 +430,7 @@ class Captcha
                 rand(0, $this->image->width()),
                 rand(0, $this->image->height()),
                 function ($draw) {
+                    /* @var Font $draw */
                     $draw->color($this->fontColor());
                 }
             );
@@ -437,10 +442,10 @@ class Captcha
     /**
      * Captcha check
      *
-     * @param $value
+     * @param string $value
      * @return bool
      */
-    public function check($value)
+    public function check(string $value): bool
     {
         if ($this->mode === 'session') {
             if (!$this->session->has('captcha')) {
@@ -459,8 +464,8 @@ class Captcha
             if ($check) {
                 $this->session->remove('captcha');
             }
-        }else{
-            $check = $this->decode($key)===$value;
+        } else {
+            $check = $this->decode($key) === $value;
         }
 
         return $check;
@@ -469,10 +474,11 @@ class Captcha
     /**
      * Captcha check
      *
-     * @param $value
+     * @param string $value
+     * @param string $key
      * @return bool
      */
-    public function check_api($value, $key)
+    public function check_api($value, $key): bool
     {
         if ($this->mode === 'session') {
             return $this->hasher->check($value, $key);
@@ -484,23 +490,23 @@ class Captcha
     /**
      * Generate captcha image source
      *
-     * @param null $config
+     * @param string $config
      * @return string
      */
-    public function src($config = null)
+    public function src(string $config = 'default'): string
     {
-        return url('captcha' . ($config ? '/' . $config : '/default')) . '?' . $this->str->random(8);
+        return url('captcha/' . $config) . '?' . $this->str->random(8);
     }
 
     /**
      * Generate captcha image html tag
      *
-     * @param null $config
-     * @param array $attrs HTML attributes supplied to the image tag where key is the attribute
-     * and the value is the attribute value
+     * @param string $config
+     * @param array $attrs
+     * @param array $attrs HTML attributes supplied to the image tag where key is the attribute and the value is the attribute value
      * @return string
      */
-    public function img($config = null, $attrs = [])
+    public function img(string $config = 'default', array $attrs = []): string
     {
         $attrs_str = '';
         foreach ($attrs as $attr => $value) {
@@ -513,7 +519,6 @@ class Captcha
         }
         return new HtmlString('<img src="' . $this->src($config) . '" ' . trim($attrs_str) . '>');
     }
-
 
     /**
      *    //加解密函数
@@ -569,14 +574,24 @@ class Captcha
          * 取值越大，密文变动规律越大，密文变化 = 16 的 $ckey_length 次方
          * 当此值为 0 时，则不产生随机密钥
          */
+        if ($operation == 'DECODE') {
+            $string = str_replace('[a]', '+', $string);
+            $string = str_replace('[b]', '&', $string);
+            $string = str_replace('[c]', '/', $string);
+        }
+        // 动态密匙长度，相同的明文会生成不同密文就是依靠动态密匙
         $ckey_length = 4;
+        // 密匙
         $key = !$key ? config('app.key') : $key;
 
         $key = md5($key);
+        // 密匙a会参与加解密
         $key_a = md5(substr($key, 0, 16));
+        // 密匙b会用来做数据完整性验证
         $key_b = md5(substr($key, 16, 16));
+        // 密匙c用于变化生成的密文
         $key_c = $ckey_length ? ($operation == 'DECODE' ? substr($string, 0, $ckey_length) : substr(md5(microtime()), -$ckey_length)) : '';
-
+        // 参与运算的密匙
         $crypt_key = $key_a . md5($key_a . $key_c);
         $key_length = strlen($crypt_key);
 
@@ -587,10 +602,11 @@ class Captcha
         $box = range(0, 255);
 
         $rand_key = [];
+        // 产生密匙簿
         for ($i = 0; $i <= 255; $i++) {
             $rand_key[$i] = ord($crypt_key[$i % $key_length]);
         }
-
+        // 用固定的算法，打乱密匙簿，增加随机性，好像很复杂，实际上对并不会增加密文的强度
         for ($j = $i = 0; $i < 256; $i++) {
             $j = ($j + $box[$i] + $rand_key[$i]) % 256;
             $tmp = $box[$i];
@@ -598,12 +614,14 @@ class Captcha
             $box[$j] = $tmp;
         }
 
+        // 核心加解密部分
         for ($a = $j = $i = 0; $i < $string_length; $i++) {
             $a = ($a + 1) % 256;
             $j = ($j + $box[$a]) % 256;
             $tmp = $box[$a];
             $box[$a] = $box[$j];
             $box[$j] = $tmp;
+            // 从密匙簿得出密匙进行异或，再转成字符
             $result .= chr(ord($string[$i]) ^ ($box[($box[$a] + $box[$j]) % 256]));
         }
 
@@ -616,7 +634,11 @@ class Captcha
                 return '';
             }
         } else {
-            return $key_c . base64_encode($result);
+            $ustr = $key_c . str_replace('=', '', base64_encode($result));
+            $ustr = str_replace('+', '[a]', $ustr);
+            $ustr = str_replace('&', '[b]', $ustr);
+            $ustr = str_replace('/', '[c]', $ustr);
+            return $ustr;
         }
     }
 }
