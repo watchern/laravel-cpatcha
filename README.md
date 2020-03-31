@@ -13,7 +13,7 @@ for Laravel 4 [Captcha for Laravel Laravel 4](https://github.com/mewebstudio/cap
 本扩展包是基于[mewbstudio的captcha(mews/captcha)](https://github.com/mewebstudio/captcha)兼容非session情况下开发的图形验证码机制。
 
 ## Preview
-![Preview](https://image.ibb.co/kZxMLm/image.png)
+![Preview](https://i.ibb.co/KLQcRNb/image.png)
 
 ## Installation
 
